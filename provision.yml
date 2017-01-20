@@ -4,19 +4,25 @@
   connection: local
   gather_facts: false
 
-  var_files: group_vars/all.yml
+  vars_files:
+     - group_vars/all.yml
 
   tasks:
 
+  - include_vars:
+      file: openstack/keystonerc_production
+    when: target == 'production'
 
-  environment:
-    - include_vars:
-        file: openstack/keystonerc_production
-      when: target == 'production'
+  - include_vars:
+      file: openstack/keystonerc_staging
+    when: target == 'staging'
 
-    - include_vars:
-        file: openstack/keystonerc_staging
-      when: target == 'staging'
+  - debug:
+
+  - name: authenticate to cloud
+    os_auth:
+
+  environment: "{{ openstack_environment }}"
 
 
 ...
