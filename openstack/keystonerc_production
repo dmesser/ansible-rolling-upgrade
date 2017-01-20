@@ -1,0 +1,8 @@
+unset OS_SERVICE_TOKEN
+    export OS_USERNAME=
+    export OS_PASSWORD=
+    export OS_AUTH_URL=http://:5000/v2.0
+    export PS1='[\u@\h \W(keystone_production)]\$ '
+
+export OS_TENANT_NAME=demo-production
+export OS_REGION_NAME=
