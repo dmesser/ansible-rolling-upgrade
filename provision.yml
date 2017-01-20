@@ -54,5 +54,52 @@
       state: present
     environment: "{{ openstack_environment }}"
 
+  - name: create database server
+    os_server:
+      name: "postgresql-{{ target }}"
+      key_name: demo
+      image: rhel-7.3-53-minimal
+      flavor: m1.small
+      boot_from_volume: yes
+      terminate_volume: yes
+      volume_size: 10
+      floating_ip_pools: external-net
+      delete_fip: yes
+      network: database
+      security_groups:
+        - ssh_icmp
+        - postgres
+    environment: "{{ openstack_environment }}"
+    register: database_server
 
+  - name: create web servers
+    os_server:
+      name: "{{ item }}-{{ target }}"
+      key_name: demo
+      image: rhel-7.3-53-minimal
+      flavor: m1.small
+      boot_from_volume: yes
+      terminate_volume: yes
+      volume_size: 10
+      floating_ip_pools: external-net
+      delete_fip: yes
+      nics:
+        - { net-name: database }
+        - { net-name: web }
+      security_groups:
+        - ssh_icmp
+        - rails
+    environment: "{{ openstack_environment }}"
+    with_items:
+      - railsapp-1
+      - railsapp-2
+    register: web_servers
+
+  - name: wait for systems to become available
+    wait_for: port=22 state=started host={{ item.server.accessIPv4 }}
+    with_items:
+      - "{{ database_server }}"
+      - "{{ web_servers.results }}"
+
+  # - debug: msg={{database_server.server.accessIPv4}}
 ...
