@@ -1,0 +1,9 @@
+---
+
+networks:
+  - database: { name: database, subnet: 172.16.0.0/16, dns: 192.168.26.1 }
+  - web: { name: web, subnet: 172.17.0.0/16, dns: 192.168.26.1 }
+
+uplink_name: external-net
+
+...

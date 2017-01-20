@@ -1,2 +1,3 @@
-
+/openstack/keystonerc_production.yaml
+/openstack/keystonerc_staging.yaml
 *.retry

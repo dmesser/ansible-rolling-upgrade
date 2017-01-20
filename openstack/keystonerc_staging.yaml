@@ -1,6 +1,7 @@
 openstack_environment:
-    OS_USERNAME:
-    OS_PASSWORD:
-    OS_AUTH_URL:
-    OS_TENANT_NAME:
-    OS_REGION_NAME:
+    OS_USERNAME: demo
+    OS_PASSWORD: password
+    OS_AUTH_URL: http://192.168.26.69:5000/v2.0
+    OS_TENANT_NAME: demo-staging
+    OS_REGION_NAME: RegionOne
+    OS_CLOUD_NAME: test
