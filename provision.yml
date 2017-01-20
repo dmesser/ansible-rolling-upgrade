@@ -10,19 +10,18 @@
   tasks:
 
   - include_vars:
-      file: openstack/keystonerc_production
+      file: openstack/keystonerc_production.yaml
     when: target == 'production'
 
   - include_vars:
-      file: openstack/keystonerc_staging
+      file: openstack/keystonerc_staging.yaml
     when: target == 'staging'
 
   - debug:
 
   - name: authenticate to cloud
     os_auth:
-
-  environment: "{{ openstack_environment }}"
+    environment: "{{ openstack_environment }}"
 
 
 ...

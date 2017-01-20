@@ -1,3 +1,2 @@
-/openstack/keystonerc_production
-/openstack/keystonerc_staging
+
 *.retry

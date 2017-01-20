@@ -1,6 +1,0 @@
-openstack_environment:
-    OS_USERNAME:
-    OS_PASSWORD:
-    OS_AUTH_URL:
-    OS_TENANT_NAME:
-    OS_REGION_NAME: 
