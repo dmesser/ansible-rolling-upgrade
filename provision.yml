@@ -1,0 +1,22 @@
+---
+
+- hosts: localhost
+  connection: local
+  gather_facts: false
+
+  var_files: group_vars/all.yml
+
+  tasks:
+
+
+  environment:
+    - include_vars:
+        file: openstack/keystonerc_production
+      when: target == 'production'
+
+    - include_vars:
+        file: openstack/keystonerc_staging
+      when: target == 'staging'
+
+
+...
