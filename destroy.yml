@@ -1,0 +1,113 @@
+---
+
+- hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    member_search_pattern: ".*{{ target }}$"
+
+  pre_tasks:
+
+    - include_vars:
+        file: openstack/keystonerc_production.yaml
+      when: target == 'production'
+
+    - include_vars:
+        file: openstack/keystonerc_staging.yaml
+      when: target == 'staging'
+
+    - name: authenticate to cloud
+      os_auth:
+      environment: "{{ openstack_environment }}"
+
+  tasks:
+
+    - name: list load-balancer pools
+      shell: neutron lbaas-pool-list -f json
+      environment: "{{ openstack_environment }}"
+      register: pool_list
+
+    - set_fact:
+        pools: "{{ pool_list.stdout|from_json }}"
+
+    - set_fact:
+        pool: true
+      when: pools|length > 0 and pools|selectattr("name", "match", "load-balancer-pool")|list|length > 0
+
+    - block:
+
+        - name: list pool members
+          shell: neutron lbaas-member-list load-balancer-pool -f json
+          environment: "{{ openstack_environment }}"
+          register: member_list
+
+        - set_fact:
+            members: "{{ member_list.stdout|from_json|selectattr('name', 'match', member_search_pattern)|list }}"
+
+        - name: remove pool members
+          shell: neutron lbaas-member-delete {{ item.name }} load-balancer-pool
+          environment: "{{ openstack_environment }}"
+          with_items:
+            - "{{ members | default([]) }}"
+          when: members is defined
+
+        - name: delete pool
+          shell: neutron lbaas-pool-delete load-balancer-pool
+          environment: "{{ openstack_environment }}"
+
+      when: pool is defined
+
+    - name: list load balancer listeners
+      shell: neutron lbaas-listener-list -f json
+      register: listener_instances
+      environment: "{{ openstack_environment }}"
+
+    - set_fact:
+        listener_instance: "{{ listener_instances.stdout|from_json|selectattr('name', 'match', 'load-balancer-listener')|list }}"
+      when: listener_instances.stdout|from_json|length > 0
+
+    - name: delete load balancer listener
+      shell: neutron lbaas-listener-delete load-balancer-listener
+      environment: "{{ openstack_environment }}"
+      when: listener_instance is defined
+
+    - name: list load balancer instances
+      shell: neutron lbaas-loadbalancer-list -f json
+      register: lbaas_instances
+      environment: "{{ openstack_environment }}"
+
+    - set_fact:
+        lbaas_instance: "{{ lbaas_instances.stdout|from_json|selectattr('name', 'match', 'load-balancer')|list }}"
+      when: lbaas_instances.stdout|from_json|length > 0
+
+    - name: delete load balancer listener
+      shell: neutron lbaas-loadbalancer-delete load-balancer
+      environment: "{{ openstack_environment }}"
+      when: lbaas_instance is defined
+
+    - name: delete servers
+      os_server:
+        name: "{{ item }}-{{ target }}"
+        state: absent
+      environment: "{{ openstack_environment }}"
+      with_items:
+        - railsapp-1
+        - railsapp-2
+        - postgresql
+
+    - name: delete router
+      os_router:
+        name: router
+        state: absent
+      environment: "{{ openstack_environment }}"
+
+    - name: delete networks
+      os_network:
+        name: "{{ item }}"
+        state: absent
+      environment: "{{ openstack_environment }}"
+      with_items:
+        - database
+        - web
+...
