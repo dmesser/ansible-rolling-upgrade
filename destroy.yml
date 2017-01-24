@@ -27,13 +27,16 @@
       shell: neutron lbaas-pool-list -f json
       environment: "{{ openstack_environment }}"
       register: pool_list
+      tags: lbaas
 
     - set_fact:
         pools: "{{ pool_list.stdout|from_json }}"
+      tags: lbaas
 
     - set_fact:
         pool: true
       when: pools|length > 0 and pools|selectattr("name", "match", "load-balancer-pool")|list|length > 0
+      tags: lbaas
 
     - block:
 
@@ -57,34 +60,41 @@
           environment: "{{ openstack_environment }}"
 
       when: pool is defined
+      tags: lbaas
 
     - name: list load balancer listeners
       shell: neutron lbaas-listener-list -f json
       register: listener_instances
       environment: "{{ openstack_environment }}"
+      tags: lbaas
 
     - set_fact:
         listener_instance: "{{ listener_instances.stdout|from_json|selectattr('name', 'match', 'load-balancer-listener')|list }}"
       when: listener_instances.stdout|from_json|length > 0
+      tags: lbaas
 
     - name: delete load balancer listener
       shell: neutron lbaas-listener-delete load-balancer-listener
       environment: "{{ openstack_environment }}"
       when: listener_instance is defined
+      tags: lbaas
 
     - name: list load balancer instances
       shell: neutron lbaas-loadbalancer-list -f json
       register: lbaas_instances
       environment: "{{ openstack_environment }}"
+      tags: lbaas
 
     - set_fact:
         lbaas_instance: "{{ lbaas_instances.stdout|from_json|selectattr('name', 'match', 'load-balancer')|list }}"
       when: lbaas_instances.stdout|from_json|length > 0
+      tags: lbaas
 
     - name: delete load balancer listener
       shell: neutron lbaas-loadbalancer-delete load-balancer
       environment: "{{ openstack_environment }}"
       when: lbaas_instance is defined
+      tags: lbaas
 
     - name: delete servers
       os_server:
@@ -95,12 +105,14 @@
         - railsapp-1
         - railsapp-2
         - postgresql
+      tags: servers
 
     - name: delete router
       os_router:
         name: router
         state: absent
       environment: "{{ openstack_environment }}"
+      tags: router
 
     - name: delete networks
       os_network:
@@ -110,4 +122,5 @@
       with_items:
         - database
         - web
+      tags: network
 ...
