@@ -1,3 +1,4 @@
 /openstack/keystonerc_production.yaml
 /openstack/keystonerc_staging.yaml
+/openstack/*.pem
 *.retry
