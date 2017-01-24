@@ -112,7 +112,7 @@
         name: router
         state: absent
       environment: "{{ openstack_environment }}"
-      tags: router
+      tags: network
 
     - name: delete networks
       os_network:
