@@ -1,0 +1,34 @@
+---
+
+- name: install postgres server and clients
+  yum: name={{ item }} state=present
+  with_items:
+    - postgresql
+    - postgresql-server
+    - postgresql-contrib
+
+- name: run postgresql-setup
+  shell: postgresql-setup initdb creates=/var/lib/pgsql/initdb.log
+
+- name: enable and start postgres service
+  service: name=postgresql enabled=yes state=started
+
+- name: enable postgres to accept connection from database subnets
+  lineinfile:
+    line: "host    all             all             172.17.0.0/16          trust"
+    dest: /var/lib/pgsql/data/pg_hba.conf
+  notify: restart postgres
+
+- name: enable postgres to accept postgres login locally
+  lineinfile:
+    line: "local    all            postgres           peer"
+    dest: /var/lib/pgsql/data/pg_hba.conf
+  notify: restart postgres
+
+- name: enable postgres to listen on all adapters
+  lineinfile:
+    line: "listen_addresses = '*'"
+    dest: /var/lib/pgsql/data/postgresql.conf
+  notify: restart postgres
+
+...
