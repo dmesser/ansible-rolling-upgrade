@@ -83,9 +83,7 @@
       volume_size: 10
       floating_ip_pools: external-net
       delete_fip: yes
-      nics:
-        - { net-name: database }
-        - { net-name: web }
+      network: web
       security_groups:
         - ssh_icmp
         - rails
@@ -95,9 +93,19 @@
       - railsapp-2
     register: web_servers
 
-  - name: wait for systems to become available
-    wait_for: port=22 state=started host={{ item.server.accessIPv4 }}
+  - add_host:
+      name: "{{ item.server.accessIPv4 }}"
+      groups: web-servers
     with_items:
-      - "{{ database_server }}"
-      - "{{ web_servers.results }}"
+       - "{{ web_servers.results }}"
+
+  - add_host:
+      name: "{{ database_server.server.accessIPv4 }}"
+      groups: database-server
+
+  - name: wait for systems to become available
+    wait_for: port=22 state=started host={{ item }}
+    with_items:
+      - "{{ groups['database-server'] }}"
+      - "{{ groups['web-servers'] }}"
 ...
