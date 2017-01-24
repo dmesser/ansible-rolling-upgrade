@@ -47,7 +47,7 @@
   - name: create router
     os_router:
       name: router
-      network: "{{ uplink_name }}"
+      network: external-net
       interfaces:
         - database-subnet
         - web-subnet
@@ -57,7 +57,7 @@
   - name: create database server
     os_server:
       name: "postgresql-{{ target }}"
-      key_name: demo
+      key_name: "{{ target }}"
       image: rhel-7.3-53-minimal
       flavor: m1.small
       boot_from_volume: yes
@@ -75,7 +75,7 @@
   - name: create web servers
     os_server:
       name: "{{ item }}-{{ target }}"
-      key_name: demo
+      key_name: "{{ target }}"
       image: rhel-7.3-53-minimal
       flavor: m1.small
       boot_from_volume: yes
@@ -94,20 +94,30 @@
     register: web_servers
 
   - add_host:
-      name: "{{ item.server.accessIPv4 }}"
+      name: "{{ item.server.name }}"
+      ansible_ssh_user: cloud-user
+      ansible_host_name: "{{ item.server.accessIPv4 }}"
+      ansible_ssh_private_key_file: "openstack/{{ target }}.pem"
+      ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
+      ansible_become: true
       groups: web-servers
     with_items:
        - "{{ web_servers.results }}"
 
   - add_host:
-      name: "{{ database_server.server.accessIPv4 }}"
+      name: "{{ database_server.server.name }}"
+      ansible_ssh_user: cloud-user
+      ansible_host: "{{ database_server.server.accessIPv4 }}"
+      ansible_ssh_private_key_file: "openstack/{{ target }}.pem"
+      ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
+      ansible_become: true
       groups: database-server
 
   - name: wait for systems to become available
-    wait_for: port=22 state=started host={{ item }}
+    wait_for: port=22 state=started host={{ item.server.accessIPv4 }}
     with_items:
-      - "{{ groups['database-server'] }}"
-      - "{{ groups['web-servers'] }}"
+      - "{{ database_server }}"
+      - "{{ web_servers.results }}"
 
   - name: check for existing load balancer
     shell: neutron lbaas-loadbalancer-list -f json
@@ -191,7 +201,7 @@
     when: pools|length > 0
 
   - name: create pool for load balancer members
-    shell: neutron lbaas-pool-create --name load-balancer-pool --lb-algorith ROUND_ROBIN --listener load-balancer-listener --protocol HTTP
+    shell: neutron lbaas-pool-create --name load-balancer-pool --lb-algorithm ROUND_ROBIN --listener load-balancer-listener --protocol HTTP
     environment: "{{ openstack_environment }}"
     when: pool is not defined
 
@@ -216,7 +226,5 @@
     with_items:
       - "{{ web_servers.results }}"
     when: members|length == 0
-
-
 
 ...
