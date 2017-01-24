@@ -1,0 +1,9 @@
+---
+
+- include: provision.yml
+
+- hosts: database-server
+  roles:
+    - postgres
+
+...

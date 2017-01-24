@@ -1,0 +1,17 @@
+---
+
+- name: ensure satellite certificate is installed
+  yum: name={{ satellite.katello_rpm_url }} state=present
+
+- name: ensure system is registered
+  redhat_subscription:
+    activationkey: "{{ satellite.activation_key }}"
+    org_id: "{{ satellite.organization_id }}"
+
+- name: install katello-agent
+  yum: name=katello-agent state=present
+
+- name: enable katello-agent
+  service: name=goferd state=started enabled=yes
+
+...

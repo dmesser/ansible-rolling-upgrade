@@ -2,7 +2,7 @@
 
 satellite:
   organization_id: "MCS_HPEMEA_NET"
-  activation_key: "rhel-7.3-scl"
+  activation_key: "rhel-7.3-server"
   katello_rpm_url: http://vmrhsat.mcs.hpemea.net/pub/katello-ca-consumer-latest.noarch.rpm
 
 ...
