@@ -5,4 +5,15 @@
 meta-app-tier_database
 
 [web-servers:children]
-meta-
+meta-app-tier_web
+
+[database-server:vars]
+ansible_ssh_private_key_file=openstack/staging.pem
+ansible_user=cloud-user
+ansible_become=true
+
+[web-servers:vars]
+ansible_ssh_private_key_file=openstack/staging.pem
+ansible_user=cloud-user
+ansible_become=true
+
