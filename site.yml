@@ -7,4 +7,10 @@
   roles:
     - postgres
     - rails-db
+
+- hosts: web-servers
+  roles:
+    - rails
+    - { role: rails-app, postgres: "{{ hostvars[groups['database-server'][0]]['postgres'] }}" }
+
 ...
