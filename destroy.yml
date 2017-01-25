@@ -90,15 +90,46 @@
       when: lbaas_instances.stdout|from_json|length > 0
       tags: lbaas
 
-    - name: delete load balancer listener
+    - name: get load balancer facts
+      shell: neutron lbaas-loadbalancer-show load-balancer -f json
+      register: load_balancer_facts
+      environment: "{{ openstack_environment }}"
+      when: lbaas_instance is defined
+
+    - set_fact:
+        lbaas_instance_detail: "{{ load_balancer_facts.stdout|from_json }}"
+      when: lbaas_instance is defined
+
+    - name: check for floating ip associated to load balancer
+      shell: neutron floatingip-list -f json
+      environment: "{{ openstack_environment }}"
+      register: floatingip_list
+      when: lbaas_instance is defined
+
+    - set_fact:
+        floatingips: "{{ floatingip_list.stdout|from_json }}"
+      when: lbaas_instance is defined
+
+    - set_fact:
+        floatingip: "{{ floatingips|selectattr('port_id', 'match', lbaas_instance_detail.vip_port_id)|first }}"
+      when: lbaas_instance is defined and floatingips|length > 0 and floatingips|selectattr('port_id', 'match', lbaas_instance_detail.vip_port_id)|list|length > 0
+
+    - name: delete load balancer
       shell: neutron lbaas-loadbalancer-delete load-balancer
       environment: "{{ openstack_environment }}"
       when: lbaas_instance is defined
       tags: lbaas
 
+    - name: disassociate floating ip from load balancer
+      shell: neutron floatingip-delete {{ floatingip.id }}
+      environment: "{{ openstack_environment }}"
+      register: floatingip_association
+      when: floatingip is defined
+
     - name: delete servers
       os_server:
         name: "{{ item }}-{{ target }}"
+        delete_fip: yes
         state: absent
       environment: "{{ openstack_environment }}"
       with_items:
