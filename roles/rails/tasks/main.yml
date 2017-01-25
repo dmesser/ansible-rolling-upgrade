@@ -1,0 +1,9 @@
+---
+
+- name: install rails from software collections
+  yum: name={{ item }} state=present
+  with_items:
+    - rh-ruby23
+    - rh-ror42
+
+...
