@@ -13,10 +13,10 @@
     - rails
     - { role: rails-app, postgres: "{{ hostvars[groups['database-server'][0]]['postgres'] }}" }
 
-- hosts: localhost
   tasks:
 
     - name: wait for application endpoint to come up
       wait_for: host={{ floatingip.floating_ip_address }} port=3000 state=started timeout=10
+      delegate_to: localhost
 
 ...
