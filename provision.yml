@@ -71,6 +71,7 @@
       security_groups:
         - ssh_icmp
         - postgres
+      meta: "app-tier=database"
     environment: "{{ openstack_environment }}"
     register: database_server
     tags:
@@ -91,6 +92,7 @@
       security_groups:
         - ssh_icmp
         - rails
+      meta: "app-tier=web"
     environment: "{{ openstack_environment }}"
     with_items:
       - railsapp-1
