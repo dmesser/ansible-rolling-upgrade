@@ -103,7 +103,7 @@
       - web-servers
 
   - add_host:
-      name: "{{ item.server.name }}"
+      name: "{{ item.server.id }}"
       ansible_ssh_user: cloud-user
       ansible_host: "{{ item.server.accessIPv4 }}"
       ansible_ssh_private_key_file: "openstack/{{ target }}.pem"
@@ -118,13 +118,14 @@
       - database-server
 
   - add_host:
-      name: "{{ database_server.server.name }}"
+      name: "{{ database_server.server.id }}"
       ansible_ssh_user: cloud-user
       ansible_host: "{{ database_server.server.accessIPv4 }}"
       ansible_ssh_private_key_file: "openstack/{{ target }}.pem"
       ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
       ansible_become: true
-      tenant_ip: "{{ database_server.server.private_v4 }}"
+      openstack:
+        private_v4: "{{ database_server.server.private_v4 }}"
       group: database-server
     tags:
       - servers
@@ -147,7 +148,6 @@
       - set_fact:
           load_balancer: true
         when: load_balancers.stdout|from_json|length > 0
-
 
       - name: create load balancer instance
         shell: neutron lbaas-loadbalancer-create --name load-balancer web-subnet -f json
@@ -271,7 +271,7 @@
         when: floatingip is not defined
 
       - set_fact:
-          floatingip: "{{ floatingip_created.floating_ip_address }}"
+          floatingip: "{{ floatingip_created }}"
         when: floatingip is not defined
 
     tags: lbaas
