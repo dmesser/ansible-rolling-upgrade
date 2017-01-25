@@ -8,7 +8,7 @@ satellite:
 postgres:
   user: rails
   password: rails
-  host: "{{ tenant_ip }}"
+  host: "{{ openstack.private_v4 }}"
   port: 5432
   database: rails
 
