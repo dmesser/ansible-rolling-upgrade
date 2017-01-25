@@ -5,4 +5,11 @@ satellite:
   activation_key: "rhel-7.3-server"
   katello_rpm_url: http://vmrhsat.mcs.hpemea.net/pub/katello-ca-consumer-latest.noarch.rpm
 
+postgres:
+  user: rails
+  password: rails
+  host: "{{ tenant_ip }}"
+  port: 5432
+  database: rails
+
 ...
