@@ -67,7 +67,6 @@
       terminate_volume: yes
       volume_size: 10
       floating_ip_pools: external-net
-      delete_fip: yes
       network: database
       security_groups:
         - ssh_icmp
@@ -82,13 +81,12 @@
     os_server:
       name: "{{ item }}-{{ target }}"
       key_name: "{{ target }}"
-      image: rhel-7.3-53-minimal
+      image: rhel-7.3-53-rails
       flavor: m1.small
       boot_from_volume: yes
       terminate_volume: yes
       volume_size: 10
       floating_ip_pools: external-net
-      delete_fip: yes
       network: web
       security_groups:
         - ssh_icmp
@@ -105,11 +103,12 @@
   - add_host:
       name: "{{ item.server.name }}"
       ansible_ssh_user: cloud-user
-      ansible_host_name: "{{ item.server.accessIPv4 }}"
+      ansible_host: "{{ item.server.accessIPv4 }}"
       ansible_ssh_private_key_file: "openstack/{{ target }}.pem"
       ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
       ansible_become: true
-      groups: web-servers
+      tenant_ip: "{{ item.server.private_v4 }}"
+      group: web-servers
     with_items:
        - "{{ web_servers.results }}"
     tags:
@@ -123,7 +122,8 @@
       ansible_ssh_private_key_file: "openstack/{{ target }}.pem"
       ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
       ansible_become: true
-      groups: database-server
+      tenant_ip: "{{ database_server.server.private_v4 }}"
+      group: database-server
     tags:
       - servers
       - web-servers
@@ -245,6 +245,33 @@
         with_items:
           - "{{ web_servers.results }}"
         when: members|length == 0
+
+      - name: check for existing floating ip
+        shell: neutron floatingip-list -f json
+        environment: "{{ openstack_environment }}"
+        register: floatingip_list
+
+      - set_fact:
+          floatingips: "{{ floatingip_list.stdout|from_json }}"
+
+      - set_fact:
+          floatingip: "{{ floatingips|selectattr('port_id', 'match', lbaas_instance.vip_port_id)|first }}"
+        when: floatingips|length > 0 and floatingips|selectattr('port_id', 'match', lbaas_instance.vip_port_id)|list|length>0
+
+      - name: associate floating ip to load balancer
+        shell: neutron floatingip-create --port-id {{ lbaas_instance.vip_port_id }} external-net -f json
+        environment: "{{ openstack_environment }}"
+        register: floatingip_association
+        when: floatingip is not defined
+
+      - set_fact:
+          floatingip_created: "{{ floatingip_association.stdout|from_json }}"
+        when: floatingip is not defined
+
+      - set_fact:
+          floatingip: "{{ floatingip_created.floating_ip_address }}"
+        when: floatingip is not defined
+
     tags: lbaas
 
 ...
