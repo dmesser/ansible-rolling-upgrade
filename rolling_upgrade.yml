@@ -1,0 +1,23 @@
+---
+
+- hosts: web-servers
+  serial: 1
+
+  pre_tasks:
+
+    - include: remove_lb_pool_member.yml member={{ ansible_default_ipv4.address }}
+
+  roles:
+    - rails
+    - { role: rails-app, postgres: "{{ hostvars[groups['database-server'][0]]['postgres'] }}" }
+
+  post_tasks:
+
+    - name: wait for application endpoint to come up
+      wait_for: host={{ openstack.accessIPv4 }} port=3000 state=started timeout=10
+      delegate_to: localhost
+
+    - include: add_lb_pool_member.yml member={{ ansible_default_ipv4.address }}
+
+
+...
