@@ -1,0 +1,11 @@
+[Unit]
+Description=A sample Rails Application
+After=syslog.target network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/cloud-user/rails-ex
+ExecStart=/usr/bin/scl enable rh-ruby23 rh-ror42 nodejs010 -- /opt/rh/rh-ror42/root/usr/bin/rails server -b 0.0.0.0 -p 3000
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,39 @@
+---
+
+- include: dependencies.yml
+
+- name: ensure git is present
+  yum: name=git state=present
+
+- block:
+
+    - name: deploy application from git
+      git:
+        repo: https://github.com/dmesser/rails-ex.git
+        dest: rails-ex
+        force: yes
+
+    - name: copy database configuration
+      template: src=database.yml.j2 dest=rails-ex/config/database.yml
+
+    - name: build app runtime dependencies
+      shell: source scl_source enable rh-ruby23 rh-ror42 nodejs010 && bundler install
+      args:
+        chdir: rails-ex
+
+    - name: migrate database
+      shell: source scl_source enable rh-ruby23 rh-ror42 nodejs010 && bin/rails db:migrate RAILS_ENV=development
+      args:
+        chdir: rails-ex
+      run_once: true
+
+  become: no
+
+
+- name: create systemd service for app
+  copy: src=rails-ex.service dest=/etc/systemd/system/rails-ex.service
+  notify:
+    - start app
+
+
+...

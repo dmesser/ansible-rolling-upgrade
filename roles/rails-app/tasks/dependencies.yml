@@ -1,0 +1,17 @@
+---
+
+- name: install app build dependencies
+  yum: name={{ item }} state=present
+  with_items:
+    - rh-ruby23-ruby-devel
+    - rh-ruby23-rubygems
+    - gcc
+    - zlib-devel
+    - postgresql-devel
+    - sqlite-devel
+
+- name: install app runtime dependencies
+  yum: name={{ item }} state=present
+  with_items:
+    - nodejs010
+...

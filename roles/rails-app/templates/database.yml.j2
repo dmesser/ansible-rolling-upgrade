@@ -1,0 +1,18 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  username: {{ postgres.user }}
+  password: {{ postgres.password }}
+  host: {{ postgres.host }}
+  port: {{ postgres.port }}
+  database: {{ postgres.database }}
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
