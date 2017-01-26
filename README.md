@@ -50,6 +50,8 @@ $ export OS_CLIENT_CONFIG_FILE=staging-cloud.yaml
 $ ansible-playbook -e "target=staging" destroy.yml
 ```
 
+## Todo
+
 To achieve the "Continuous" part of CI/CD triggering these playbooks could for instance be called upon code commits. GitHub Webhooks or Jenkins SCM Polling Jobs are popular choices. Integration in this regard is outside of the scope of this example.
 
 
