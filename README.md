@@ -14,7 +14,7 @@ Requirements
   - python-openstackclient
   - (optionally Red Hat Satellite Server)
 
-OpenStack credentials with appropriate access to the tenants needs to be provided either via os-cloud-config or credentials stored in the keystonerc_* files. It's is advised to encrypt the latter with ansible-vault.
+OpenStack credentials with appropriate access to the tenants needs to be provided either via os-client-config or credentials stored in the keystonerc_* files. It's is advised to encrypt the latter with ansible-vault.
 
 SSH private keys need to be present in the openstack/ directory and named according to the tenant.
 
