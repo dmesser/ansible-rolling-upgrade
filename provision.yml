@@ -132,7 +132,7 @@
 
   - block:
       - name: check for existing load balancer
-        shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-list -f json
+        shell: neutron --os-cloud={{ os_client_target }} lbaas-loadbalancer-list -f json
         register: load_balancers
         tags: lbaas
 
@@ -141,37 +141,37 @@
         when: load_balancers.stdout|from_json|length > 0
 
       - name: create load balancer instance
-        shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-create --name load-balancer web-subnet -f json
+        shell: neutron --os-cloud={{ os_client_target }} lbaas-loadbalancer-create --name load-balancer web-subnet -f json
         register: load_balancer_create
         when: load_balancer is undefined
 
       - name: get load balancer facts
-        shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-show load-balancer -f json
+        shell: neutron --os-cloud={{ os_client_target }} lbaas-loadbalancer-show load-balancer -f json
         register: load_balancer_facts
 
       - set_fact:
           lbaas_instance: "{{ load_balancer_facts.stdout|from_json }}"
 
       - name: get security group facts
-        shell: neutron --os-cloud={{ target }} security-group-show rails -f json
+        shell: neutron --os-cloud={{ os_client_target }} security-group-show rails -f json
         register: security_group_facts
 
       - set_fact:
           security_group: "{{ security_group_facts.stdout|from_json }}"
 
       - name: get load balancer port facts
-        shell: neutron --os-cloud={{ target }} port-show {{ lbaas_instance.vip_port_id }} -f json
+        shell: neutron --os-cloud={{ os_client_target }} port-show {{ lbaas_instance.vip_port_id }} -f json
         register: load_balancer_port_facts
 
       - set_fact:
           load_balancer_port: "{{ load_balancer_port_facts.stdout|from_json }}"
 
       - name: apply security group to load balancer
-        shell: neutron --os-cloud={{ target }} port-update --security-group rails {{ lbaas_instance.vip_port_id }}
+        shell: neutron --os-cloud={{ os_client_target }} port-update --security-group rails {{ lbaas_instance.vip_port_id }}
         when: security_group.id not in load_balancer_port.security_groups
 
       - name: check for existing listener
-        shell: neutron --os-cloud={{ target }} lbaas-listener-list -f json
+        shell: neutron --os-cloud={{ os_client_target }} lbaas-listener-list -f json
         register: listener_list
 
       - set_fact:
@@ -182,18 +182,18 @@
         when: listeners|length > 0
 
       - name: create listener for load balancer
-        shell: neutron --os-cloud={{ target }} lbaas-listener-create --name load-balancer-listener --loadbalancer load-balancer --protocol HTTP --protocol-port 3000
+        shell: neutron --os-cloud={{ os_client_target }} lbaas-listener-create --name load-balancer-listener --loadbalancer load-balancer --protocol HTTP --protocol-port 3000
         when: listener is not defined
 
       - name: get listener facts
-        shell: neutron --os-cloud={{ target }} lbaas-listener-show load-balancer-listener -f json
+        shell: neutron --os-cloud={{ os_client_target }} lbaas-listener-show load-balancer-listener -f json
         register: listener_facts
 
       - set_fact:
           listener_instance: "{{ listener_facts.stdout|from_json }}"
 
       - name: check for existing pool
-        shell: neutron --os-cloud={{ target }} lbaas-pool-list -f json
+        shell: neutron --os-cloud={{ os_client_target }} lbaas-pool-list -f json
         register: pool_list
 
       - set_fact:
@@ -204,30 +204,30 @@
         when: pools|length > 0
 
       - name: create pool for load balancer members
-        shell: neutron --os-cloud={{ target }} lbaas-pool-create --name load-balancer-pool --lb-algorithm ROUND_ROBIN --listener load-balancer-listener --protocol HTTP
+        shell: neutron --os-cloud={{ os_client_target }} lbaas-pool-create --name load-balancer-pool --lb-algorithm ROUND_ROBIN --listener load-balancer-listener --protocol HTTP
         when: pool is not defined
 
       - name: check for existing pool members
-        shell: neutron --os-cloud={{ target }} lbaas-member-list load-balancer-pool -f json
+        shell: neutron --os-cloud={{ os_client_target }} lbaas-member-list load-balancer-pool -f json
         register: member_list
 
       - set_fact:
           members: "{{ member_list.stdout|from_json }}"
 
       - name: check if web servers are members of the pool
-        shell: neutron --os-cloud={{ target }} lbaas-member-show {{ item.server.name }} load-balancer-pool
+        shell: neutron --os-cloud={{ os_client_target }} lbaas-member-show {{ item.server.name }} load-balancer-pool
         with_items:
           - "{{ web_servers.results }}"
         when: members|length > 0
 
       - name: create pool members for web servers
-        shell: neutron --os-cloud={{ target }} lbaas-member-create --name {{ item.server.name }} --subnet web-subnet --address {{ item.server.private_v4 }}  --protocol-port 3000 load-balancer-pool
+        shell: neutron --os-cloud={{ os_client_target }} lbaas-member-create --name {{ item.server.name }} --subnet web-subnet --address {{ item.server.private_v4 }}  --protocol-port 3000 load-balancer-pool
         with_items:
           - "{{ web_servers.results }}"
         when: members|length == 0
 
       - name: check for existing floating ip
-        shell: neutron --os-cloud={{ target }} floatingip-list -f json
+        shell: neutron --os-cloud={{ os_client_target }} floatingip-list -f json
         register: floatingip_list
 
       - set_fact:
@@ -238,7 +238,7 @@
         when: floatingips|length > 0 and floatingips|selectattr('port_id', 'match', lbaas_instance.vip_port_id)|list|length>0
 
       - name: associate floating ip to load balancer
-        shell: neutron --os-cloud={{ target }} floatingip-create --port-id {{ lbaas_instance.vip_port_id }} external-net -f json
+        shell: neutron --os-cloud={{ os_client_target }} floatingip-create --port-id {{ lbaas_instance.vip_port_id }} external-net -f json
         register: floatingip_association
         when: floatingip is not defined
 

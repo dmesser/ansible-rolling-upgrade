@@ -16,7 +16,7 @@
   tasks:
 
     - name: list load-balancer pools
-      shell: neutron --os-cloud={{ target }} lbaas-pool-list -f json
+      shell: neutron --os-cloud={{ os_client_target }} lbaas-pool-list -f json
       register: pool_list
       tags: lbaas
 
@@ -32,26 +32,26 @@
     - block:
 
         - name: list pool members
-          shell: neutron --os-cloud={{ target }} lbaas-member-list load-balancer-pool -f json
+          shell: neutron --os-cloud={{ os_client_target }} lbaas-member-list load-balancer-pool -f json
           register: member_list
 
         - set_fact:
             members: "{{ member_list.stdout|from_json|selectattr('name', 'match', member_search_pattern)|list }}"
 
         - name: remove pool members
-          shell: neutron --os-cloud={{ target }} lbaas-member-delete {{ item.name }} load-balancer-pool
+          shell: neutron --os-cloud={{ os_client_target }} lbaas-member-delete {{ item.name }} load-balancer-pool
           with_items:
             - "{{ members | default([]) }}"
           when: members is defined
 
         - name: delete pool
-          shell: neutron --os-cloud={{ target }} lbaas-pool-delete load-balancer-pool
+          shell: neutron --os-cloud={{ os_client_target }} lbaas-pool-delete load-balancer-pool
 
       when: pool is defined
       tags: lbaas
 
     - name: list load balancer listeners
-      shell: neutron --os-cloud={{ target }} lbaas-listener-list -f json
+      shell: neutron --os-cloud={{ os_client_target }} lbaas-listener-list -f json
       register: listener_instances
       tags: lbaas
 
@@ -61,12 +61,12 @@
       tags: lbaas
 
     - name: delete load balancer listener
-      shell: neutron --os-cloud={{ target }} lbaas-listener-delete load-balancer-listener
+      shell: neutron --os-cloud={{ os_client_target }} lbaas-listener-delete load-balancer-listener
       when: listener_instance is defined
       tags: lbaas
 
     - name: list load balancer
-      shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-list -f json
+      shell: neutron --os-cloud={{ os_client_target }} lbaas-loadbalancer-list -f json
       register: lbaas_instances
       tags: lbaas
 
@@ -76,7 +76,7 @@
       tags: lbaas
 
     - name: get load balancer facts
-      shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-show load-balancer -f json
+      shell: neutron --os-cloud={{ os_client_target }} lbaas-loadbalancer-show load-balancer -f json
       register: load_balancer_facts
       when: lbaas_instance is defined
 
@@ -85,7 +85,7 @@
       when: lbaas_instance is defined
 
     - name: check for floating ip associated to load balancer
-      shell: neutron --os-cloud={{ target }} floatingip-list -f json
+      shell: neutron --os-cloud={{ os_client_target }} floatingip-list -f json
       register: floatingip_list
       when: lbaas_instance is defined
 
@@ -98,12 +98,12 @@
       when: lbaas_instance is defined and floatingips|length > 0 and floatingips|selectattr('port_id', 'match', lbaas_instance_detail.vip_port_id)|list|length > 0
 
     - name: delete load balancer
-      shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-delete load-balancer
+      shell: neutron --os-cloud={{ os_client_target }} lbaas-loadbalancer-delete load-balancer
       when: lbaas_instance is defined
       tags: lbaas
 
     - name: disassociate floating ip from load balancer
-      shell: neutron --os-cloud={{ target }} floatingip-delete {{ floatingip.id }}
+      shell: neutron --os-cloud={{ os_client_target }} floatingip-delete {{ floatingip.id }}
       register: floatingip_association
       when: floatingip is defined
 
