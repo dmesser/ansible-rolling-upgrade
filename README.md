@@ -23,7 +23,7 @@ SSH private keys need to be present in the openstack/ directory and named accord
 
 ### Package Management
 
-If no Red Hat Satellite Server is present call the playbooks with --skip-tags subscription. In this case you are responsible to provide access to packages.
+If no Red Hat Satellite Server is present call the playbooks with --skip-tags subscription. In this case you are responsible to provide access to packages. The systems check out the application code from a public GitHub repository - therefore they need internet access.
 
 ## How to run
 
