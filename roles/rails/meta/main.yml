@@ -1,6 +1,6 @@
 ---
 
 dependencies:
-  - { role: registered-system }
+  - { role: registered-system, tags: ['subscription'] }
 
 ...

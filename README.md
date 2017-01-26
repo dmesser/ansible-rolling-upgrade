@@ -10,9 +10,12 @@ Requirements
   - Two OpenStack Tenants with Keys, Images and Security Groups, at least 4 floating IPs
   - Ansible 2.2.1.0
   - python-shade
+  - (optionally Red Hat Satellite Server)
 
 OpenStack credentials with appropriate access to the tenants needs to be provided either via os-cloud-config or credentials stored in the keystonerc_* files. It's is advised to encrypt the latter with ansible-vault.
 SSH private keys need to be present in the openstack/ directory and named according to the tenant.
+
+If no Red Hat Satellite Server is present call the playbooks with --skip-tags subscription.
 
 To initially deploy the app:
 
