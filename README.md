@@ -18,9 +18,9 @@ OpenStack credentials with appropriate access to the tenants needs to be provide
 
 SSH private keys need to be present in the openstack/ directory and named according to the tenant.
 
-If no Red Hat Satellite Server is present call the playbooks with --skip-tags subscription. In this case you are responsible to provide access to packages
+If no Red Hat Satellite Server is present call the playbooks with --skip-tags subscription. In this case you are responsible to provide access to packages.
 
-### How to run
+## How to run
 
 To initially deploy the app:
 
