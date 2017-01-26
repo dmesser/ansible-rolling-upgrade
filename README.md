@@ -1,6 +1,6 @@
 # Infrastructure Orchestration Example
 
-This is a Continuous Integraton / Continuous Deployment example leveraging the concept of Infrastructure-as-Data provided by Ansible.
+This is a Continuous Integration / Continuous Deployment example leveraging the concept of Infrastructure-as-Data provided by Ansible.
 
 A sufficiently complex multi-tier application is orchestrated across multiple systems, networks and load balancers stood up in an OpenStack environment. The deployment process is covered in Ansible Plays and Roles end-to-end. Updates to the application are enabled by a rolling re-deployment of the application.
 
