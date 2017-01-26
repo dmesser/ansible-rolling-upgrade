@@ -11,7 +11,7 @@
 
     - name: authenticate to cloud
       os_auth:
-        cloud: "{{ target }}"
+        cloud: "{{ os-client-target }}"
 
   tasks:
 
@@ -112,7 +112,7 @@
         name: "{{ item }}-{{ target }}"
         delete_fip: yes
         state: absent
-        cloud: "{{ target }}"
+        cloud: "{{ os-client-target }}"
       with_items:
         - railsapp-1
         - railsapp-2
@@ -123,14 +123,14 @@
       os_router:
         name: router
         state: absent
-        cloud: "{{ target }}"
+        cloud: "{{ os-client-target }}"
       tags: network
 
     - name: delete networks
       os_network:
         name: "{{ item }}"
         state: absent
-        cloud: "{{ target }}"
+        cloud: "{{ os-client-target }}"
       with_items:
         - database
         - web

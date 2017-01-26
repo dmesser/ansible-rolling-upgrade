@@ -5,4 +5,8 @@ satellite:
   activation_key: rhel-7.3-scl
   katello_rpm_url: http://vmrhsat.mcs.hpemea.net/pub/katello-ca-consumer-latest.noarch.rpm
 
+
+os-client-target: "{{ target }}" # introduced to override from within  Ansible Tower
+                                 # where the cloud name is static ('devstack')
+
 ...
