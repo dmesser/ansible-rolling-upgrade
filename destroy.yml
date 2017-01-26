@@ -9,23 +9,14 @@
 
   pre_tasks:
 
-    - include_vars:
-        file: openstack/keystonerc_production.yaml
-      when: target == 'production'
-
-    - include_vars:
-        file: openstack/keystonerc_staging.yaml
-      when: target == 'staging'
-
     - name: authenticate to cloud
       os_auth:
-      environment: "{{ openstack_environment }}"
+        cloud: "{{ target }}"
 
   tasks:
 
     - name: list load-balancer pools
-      shell: neutron lbaas-pool-list -f json
-      environment: "{{ openstack_environment }}"
+      shell: neutron --os-cloud={{ target }} lbaas-pool-list -f json
       register: pool_list
       tags: lbaas
 
@@ -41,31 +32,27 @@
     - block:
 
         - name: list pool members
-          shell: neutron lbaas-member-list load-balancer-pool -f json
-          environment: "{{ openstack_environment }}"
+          shell: neutron --os-cloud={{ target }} lbaas-member-list load-balancer-pool -f json
           register: member_list
 
         - set_fact:
             members: "{{ member_list.stdout|from_json|selectattr('name', 'match', member_search_pattern)|list }}"
 
         - name: remove pool members
-          shell: neutron lbaas-member-delete {{ item.name }} load-balancer-pool
-          environment: "{{ openstack_environment }}"
+          shell: neutron --os-cloud={{ target }} lbaas-member-delete {{ item.name }} load-balancer-pool
           with_items:
             - "{{ members | default([]) }}"
           when: members is defined
 
         - name: delete pool
-          shell: neutron lbaas-pool-delete load-balancer-pool
-          environment: "{{ openstack_environment }}"
+          shell: neutron --os-cloud={{ target }} lbaas-pool-delete load-balancer-pool
 
       when: pool is defined
       tags: lbaas
 
     - name: list load balancer listeners
-      shell: neutron lbaas-listener-list -f json
+      shell: neutron --os-cloud={{ target }} lbaas-listener-list -f json
       register: listener_instances
-      environment: "{{ openstack_environment }}"
       tags: lbaas
 
     - set_fact:
@@ -74,15 +61,13 @@
       tags: lbaas
 
     - name: delete load balancer listener
-      shell: neutron lbaas-listener-delete load-balancer-listener
-      environment: "{{ openstack_environment }}"
+      shell: neutron --os-cloud={{ target }} lbaas-listener-delete load-balancer-listener
       when: listener_instance is defined
       tags: lbaas
 
-    - name: list load balancer instances
-      shell: neutron lbaas-loadbalancer-list -f json
+    - name: list load balancer
+      shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-list -f json
       register: lbaas_instances
-      environment: "{{ openstack_environment }}"
       tags: lbaas
 
     - set_fact:
@@ -91,9 +76,8 @@
       tags: lbaas
 
     - name: get load balancer facts
-      shell: neutron lbaas-loadbalancer-show load-balancer -f json
+      shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-show load-balancer -f json
       register: load_balancer_facts
-      environment: "{{ openstack_environment }}"
       when: lbaas_instance is defined
 
     - set_fact:
@@ -101,8 +85,7 @@
       when: lbaas_instance is defined
 
     - name: check for floating ip associated to load balancer
-      shell: neutron floatingip-list -f json
-      environment: "{{ openstack_environment }}"
+      shell: neutron --os-cloud={{ target }} floatingip-list -f json
       register: floatingip_list
       when: lbaas_instance is defined
 
@@ -115,14 +98,12 @@
       when: lbaas_instance is defined and floatingips|length > 0 and floatingips|selectattr('port_id', 'match', lbaas_instance_detail.vip_port_id)|list|length > 0
 
     - name: delete load balancer
-      shell: neutron lbaas-loadbalancer-delete load-balancer
-      environment: "{{ openstack_environment }}"
+      shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-delete load-balancer
       when: lbaas_instance is defined
       tags: lbaas
 
     - name: disassociate floating ip from load balancer
-      shell: neutron floatingip-delete {{ floatingip.id }}
-      environment: "{{ openstack_environment }}"
+      shell: neutron --os-cloud={{ target }} floatingip-delete {{ floatingip.id }}
       register: floatingip_association
       when: floatingip is defined
 
@@ -131,7 +112,7 @@
         name: "{{ item }}-{{ target }}"
         delete_fip: yes
         state: absent
-      environment: "{{ openstack_environment }}"
+        cloud: "{{ target }}"
       with_items:
         - railsapp-1
         - railsapp-2
@@ -142,14 +123,14 @@
       os_router:
         name: router
         state: absent
-      environment: "{{ openstack_environment }}"
+        cloud: "{{ target }}"
       tags: network
 
     - name: delete networks
       os_network:
         name: "{{ item }}"
         state: absent
-      environment: "{{ openstack_environment }}"
+        cloud: "{{ target }}"
       with_items:
         - database
         - web

@@ -9,17 +9,9 @@
 
   pre_tasks:
 
-    - include_vars:
-        file: openstack/keystonerc_production.yaml
-      when: target == 'production'
-
-    - include_vars:
-        file: openstack/keystonerc_staging.yaml
-      when: target == 'staging'
-
     - name: authenticate to cloud
       os_auth:
-      environment: "{{ openstack_environment }}"
+        cloud: "{{ target }}"
 
   tasks:
 
@@ -27,7 +19,7 @@
     os_network:
       name: "{{ item }}"
       state: present
-    environment: "{{ openstack_environment }}"
+      cloud: "{{ target }}"
     with_items:
       - database
       - web
@@ -40,7 +32,7 @@
       dns_nameservers: "{{ item.dns }}"
       cidr: "{{ item.cidr }}"
       state: present
-    environment: "{{ openstack_environment }}"
+      cloud: "{{ target }}"
     with_items:
       - { network: database, subnet: database-subnet, cidr: 172.16.0.0/16, dns: 192.168.26.1 }
       - { network: web, subnet: web-subnet, cidr: 172.17.0.0/16, dns: 192.168.26.1 }
@@ -54,7 +46,7 @@
         - database-subnet
         - web-subnet
       state: present
-    environment: "{{ openstack_environment }}"
+      cloud: "{{ target }}"
     tags: network
 
   - name: create database server
@@ -72,7 +64,7 @@
         - ssh_icmp
         - postgres
       meta: "app-tier=database"
-    environment: "{{ openstack_environment }}"
+      cloud: "{{ target }}"
     register: database_server
     tags:
       - servers
@@ -93,7 +85,7 @@
         - ssh_icmp
         - rails
       meta: "app-tier=web"
-    environment: "{{ openstack_environment }}"
+      cloud: "{{ target }}"
     with_items:
       - railsapp-1
       - railsapp-2
@@ -140,9 +132,8 @@
 
   - block:
       - name: check for existing load balancer
-        shell: neutron lbaas-loadbalancer-list -f json
+        shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-list -f json
         register: load_balancers
-        environment: "{{ openstack_environment }}"
         tags: lbaas
 
       - set_fact:
@@ -150,43 +141,37 @@
         when: load_balancers.stdout|from_json|length > 0
 
       - name: create load balancer instance
-        shell: neutron lbaas-loadbalancer-create --name load-balancer web-subnet -f json
+        shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-create --name load-balancer web-subnet -f json
         register: load_balancer_create
-        environment: "{{ openstack_environment }}"
         when: load_balancer is undefined
 
       - name: get load balancer facts
-        shell: neutron lbaas-loadbalancer-show load-balancer -f json
+        shell: neutron --os-cloud={{ target }} lbaas-loadbalancer-show load-balancer -f json
         register: load_balancer_facts
-        environment: "{{ openstack_environment }}"
 
       - set_fact:
           lbaas_instance: "{{ load_balancer_facts.stdout|from_json }}"
 
       - name: get security group facts
-        shell: neutron security-group-show rails -f json
+        shell: neutron --os-cloud={{ target }} security-group-show rails -f json
         register: security_group_facts
-        environment: "{{ openstack_environment }}"
 
       - set_fact:
           security_group: "{{ security_group_facts.stdout|from_json }}"
 
       - name: get load balancer port facts
-        shell: neutron port-show {{ lbaas_instance.vip_port_id }} -f json
+        shell: neutron --os-cloud={{ target }} port-show {{ lbaas_instance.vip_port_id }} -f json
         register: load_balancer_port_facts
-        environment: "{{ openstack_environment }}"
 
       - set_fact:
           load_balancer_port: "{{ load_balancer_port_facts.stdout|from_json }}"
 
       - name: apply security group to load balancer
-        shell: neutron port-update --security-group rails {{ lbaas_instance.vip_port_id }}
-        environment: "{{ openstack_environment }}"
+        shell: neutron --os-cloud={{ target }} port-update --security-group rails {{ lbaas_instance.vip_port_id }}
         when: security_group.id not in load_balancer_port.security_groups
 
       - name: check for existing listener
-        shell: neutron lbaas-listener-list -f json
-        environment: "{{ openstack_environment }}"
+        shell: neutron --os-cloud={{ target }} lbaas-listener-list -f json
         register: listener_list
 
       - set_fact:
@@ -197,21 +182,18 @@
         when: listeners|length > 0
 
       - name: create listener for load balancer
-        shell: neutron lbaas-listener-create --name load-balancer-listener --loadbalancer load-balancer --protocol HTTP --protocol-port 3000
-        environment: "{{ openstack_environment }}"
+        shell: neutron --os-cloud={{ target }} lbaas-listener-create --name load-balancer-listener --loadbalancer load-balancer --protocol HTTP --protocol-port 3000
         when: listener is not defined
 
       - name: get listener facts
-        shell: neutron lbaas-listener-show load-balancer-listener -f json
+        shell: neutron --os-cloud={{ target }} lbaas-listener-show load-balancer-listener -f json
         register: listener_facts
-        environment: "{{ openstack_environment }}"
 
       - set_fact:
           listener_instance: "{{ listener_facts.stdout|from_json }}"
 
       - name: check for existing pool
-        shell: neutron lbaas-pool-list -f json
-        environment: "{{ openstack_environment }}"
+        shell: neutron --os-cloud={{ target }} lbaas-pool-list -f json
         register: pool_list
 
       - set_fact:
@@ -222,35 +204,30 @@
         when: pools|length > 0
 
       - name: create pool for load balancer members
-        shell: neutron lbaas-pool-create --name load-balancer-pool --lb-algorithm ROUND_ROBIN --listener load-balancer-listener --protocol HTTP
-        environment: "{{ openstack_environment }}"
+        shell: neutron --os-cloud={{ target }} lbaas-pool-create --name load-balancer-pool --lb-algorithm ROUND_ROBIN --listener load-balancer-listener --protocol HTTP
         when: pool is not defined
 
       - name: check for existing pool members
-        shell: neutron lbaas-member-list load-balancer-pool -f json
-        environment: "{{ openstack_environment }}"
+        shell: neutron --os-cloud={{ target }} lbaas-member-list load-balancer-pool -f json
         register: member_list
 
       - set_fact:
           members: "{{ member_list.stdout|from_json }}"
 
       - name: check if web servers are members of the pool
-        shell: neutron lbaas-member-show {{ item.server.name }} load-balancer-pool
-        environment: "{{ openstack_environment }}"
+        shell: neutron --os-cloud={{ target }} lbaas-member-show {{ item.server.name }} load-balancer-pool
         with_items:
           - "{{ web_servers.results }}"
         when: members|length > 0
 
       - name: create pool members for web servers
-        shell: neutron lbaas-member-create --name {{ item.server.name }} --subnet web-subnet --address {{ item.server.private_v4 }}  --protocol-port 3000 load-balancer-pool
-        environment: "{{ openstack_environment }}"
+        shell: neutron --os-cloud={{ target }} lbaas-member-create --name {{ item.server.name }} --subnet web-subnet --address {{ item.server.private_v4 }}  --protocol-port 3000 load-balancer-pool
         with_items:
           - "{{ web_servers.results }}"
         when: members|length == 0
 
       - name: check for existing floating ip
-        shell: neutron floatingip-list -f json
-        environment: "{{ openstack_environment }}"
+        shell: neutron --os-cloud={{ target }} floatingip-list -f json
         register: floatingip_list
 
       - set_fact:
@@ -261,8 +238,7 @@
         when: floatingips|length > 0 and floatingips|selectattr('port_id', 'match', lbaas_instance.vip_port_id)|list|length>0
 
       - name: associate floating ip to load balancer
-        shell: neutron floatingip-create --port-id {{ lbaas_instance.vip_port_id }} external-net -f json
-        environment: "{{ openstack_environment }}"
+        shell: neutron --os-cloud={{ target }} floatingip-create --port-id {{ lbaas_instance.vip_port_id }} external-net -f json
         register: floatingip_association
         when: floatingip is not defined
 
