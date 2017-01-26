@@ -2,3 +2,4 @@
 /openstack/keystonerc_staging.yaml
 /openstack/*.pem
 *.retry
+clouds.yaml
