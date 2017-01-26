@@ -4,7 +4,7 @@ This is a Continuous Integration / Continuous Deployment example leveraging the 
 
 A sufficiently complex multi-tier application is orchestrated across multiple systems, networks and load balancers stood up in an OpenStack environment. The deployment process is covered in Ansible Plays and Roles end-to-end. Updates to the application are enabled by a rolling re-deployment of the application.
 
-Requirements
+### Requirements
 
   - OpenStack environment with Glance, Cinder, Nova, Neutron and LBaaS v2
   - Two OpenStack Tenants with Keys, Images and Security Groups, 4 floating IPs
@@ -14,9 +14,14 @@ Requirements
   - python-openstackclient
   - (optionally Red Hat Satellite Server)
 
-OpenStack credentials with appropriate access to the tenants need to be provided via [os-client-config]. While you can put multiple cloud definitions in one file it is encouraged to use separate files for separate tenants of the same OpenStack cloud since the OpenStack dynamic inventory script will otherwise merge all instances found into a large pool. This
+
+### Credential management
+
+OpenStack credentials with appropriate access to the tenants need to be provided via [os-client-config]. While you can put multiple cloud definitions in one file it is encouraged to use separate files for separate tenants of the same OpenStack cloud since the OpenStack dynamic inventory script will otherwise merge all instances found into a large pool. This will lead to access problems when using the wrong SSH keys defined in the static inventory.
 
 SSH private keys need to be present in the openstack/ directory and named according to the tenant.
+
+### Package Management
 
 If no Red Hat Satellite Server is present call the playbooks with --skip-tags subscription. In this case you are responsible to provide access to packages.
 
