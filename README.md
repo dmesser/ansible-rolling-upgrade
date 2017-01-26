@@ -8,7 +8,7 @@ Requirements
 
   - OpenStack environment with Glance, Cinder, Nova, Neutron and LBaaS v2
   - Two OpenStack Tenants with Keys, Images and Security Groups, at least 4 floating IPs
-  - Ansible 2.2.0.1
+  - Ansible 2.2.1.0
   - python-shade
 
 OpenStack credentials with appropriate access to the tenants needs to be provided either via os-cloud-config or credentials stored in the keystonerc_* files. It's is advised to encrypt the latter with ansible-vault.
