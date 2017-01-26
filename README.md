@@ -11,13 +11,16 @@ Requirements
   - Ansible 2.2.0.1
   - python-shade
 
+OpenStack credentials with appropriate access to the tenants needs to be provided either via os-cloud-config or credentials stored in the keystonerc_* files. It's is advised to encrypt the latter with ansible-vault.
+SSH private keys need to be present in the openstack/ directory and named according to the tenant.
+
 To initially deploy the app:
 
 ```sh
 $ ansible-playbook -e "target=staging" site.yml
 ```
 
-with an existing tenant named demo-staging.
+with an existing tenant named demo-staging and a private key openstack/staging.pem.
 
 To initiate the rolling upgrade:
 
@@ -30,5 +33,3 @@ To cleanup a deployment and remove all components:
 ```sh
 $ ansible-playbook -e "target=staging" destroy.yml
 ```
-
-OpenStack credentials with appropriate access to the tenants needs to be provided either via os-cloud-config or credentials stored in the keystonerc_* files. It's is advised to encrypt the latter with ansible-vault.
