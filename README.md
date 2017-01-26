@@ -7,15 +7,20 @@ A sufficiently complex multi-tier application is orchestrated across multiple sy
 Requirements
 
   - OpenStack environment with Glance, Cinder, Nova, Neutron and LBaaS v2
-  - Two OpenStack Tenants with Keys, Images and Security Groups, at least 4 floating IPs
+  - Two OpenStack Tenants with Keys, Images and Security Groups, 4 floating IPs
+  - OpenStack Images running RHEL 7.x or CentOS 7.x
   - Ansible 2.2.1.0
   - python-shade
+  - python-openstackclient
   - (optionally Red Hat Satellite Server)
 
 OpenStack credentials with appropriate access to the tenants needs to be provided either via os-cloud-config or credentials stored in the keystonerc_* files. It's is advised to encrypt the latter with ansible-vault.
+
 SSH private keys need to be present in the openstack/ directory and named according to the tenant.
 
-If no Red Hat Satellite Server is present call the playbooks with --skip-tags subscription.
+If no Red Hat Satellite Server is present call the playbooks with --skip-tags subscription. In this case you are responsible to provide access to packages
+
+### How to run
 
 To initially deploy the app:
 
