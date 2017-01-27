@@ -52,7 +52,7 @@ $ ansible-playbook -e "target=staging" destroy.yml
 ## How to run in Ansible Tower
 
 > Currently there is an issue in Ansible Tower 3.0.3 and the os-client-config version shipped with it when using the built-in OpenStack inventory script.
-> os-client-config is statically initialized with the *private* parameter set to true. This can be overridden with source variable definitions in the Tower Inventory. However incorrect string conversion leads to this parameter always be set to true unless it's initalized with ''.
+> os-client-config is statically initialized with the *private* parameter set to true. This can be overridden with source variable definitions in the Tower Inventory. However insufficient string conversion in os-client-config leads to this parameter always be set to true unless it's initalized with '' in YAML.
 > When the parameter is true it will cause python-shade to treat the OpenStack cloud as not capable of providing floating IPs.
 > As such all IPs reported in the inventory will be OpenStack-internal tenant IPs and the floating IPs will be ignored.
 
