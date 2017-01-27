@@ -17,38 +17,49 @@ A sufficiently complex multi-tier application is orchestrated across multiple sy
 
 ### Credential management
 
-OpenStack credentials with appropriate access to the tenants need to be provided via [os-client-config]. While you can put multiple cloud definitions in one file it is encouraged to use separate files for separate tenants of the same OpenStack cloud since the OpenStack dynamic inventory script will otherwise merge all instances found into a large pool. This will lead to access problems when using the wrong SSH keys defined in the static inventory.
+OpenStack credentials with appropriate access to the tenants need to be provided via [os-client-config]. The name of the cloud is provided via the target variable and is expected to be the same as the tenant name in OpenStack.
 
-SSH private keys need to be present in the openstack/ directory and named according to the tenant.
+SSH private keys need to be present in openstack/<tenant>.pem.
 
 ### Package Management
 
 If no Red Hat Satellite Server is present call the playbooks with --skip-tags subscription. In this case you are responsible to provide access to packages. The systems check out the application code from a public GitHub repository - therefore they need internet access.
 
-## How to run
+## How to run with ansible-playbook
+
+While you can put multiple cloud definitions in one clouds.yaml file it is encouraged to use separate files for separate tenants of the same OpenStack cloud since the OpenStack dynamic inventory script will otherwise merge all instances found into a large pool. This will lead to access problems when using the wrong SSH keys defined in the static inventory.
 
 To initially deploy the app:
 
 ```sh
-$ export OS_CLIENT_CONFIG_FILE=staging-cloud.yaml
 $ ansible-playbook -e "target=staging" site.yml
 ```
 
-with an existing tenant named demo-staging and a private key openstack/staging.pem.
+with an existing tenant named staging and a private key openstack/staging.pem.
 
 To initiate the rolling upgrade with the running instances retrieved via the dynamic inventory:
 
 ```sh
-$ export OS_CLIENT_CONFIG_FILE=staging-cloud.yaml
 $ ansible-playbook -i inventory-staging -e "target=staging" rolling_upgrade.yml
 ```
 
 To cleanup a deployment and remove all components:
 
 ```sh
-$ export OS_CLIENT_CONFIG_FILE=staging-cloud.yaml
 $ ansible-playbook -e "target=staging" destroy.yml
 ```
+
+## How to run in Ansible Tower
+
+1. Create a project with SCM type set to GitHub pointing to this GitHub project
+2. Create Machine credentials, one for each of the tenants containing the SSH private key
+ * enable privilege escalation using sudo for the user 'cloud-user'
+3. Create OpenStack credentials, each containing the endpoint URLs, username, password and region for your tenants
+4. Create OpenSack Dynamic Inventories for all tenants separately
+5. Create a Job Template for the site.yml, rolling_upgrade.yml and destroy.yml, for each tenant separately with the specific credentials, keys and Inventories for this tenant
+  * configure the template with the additional parameter os_client_target set to "devstack"
+
+The latter variable is needed because currently in Ansible Tower it's not possible to influence the name of the cloud provided by the temporary os-client-config file created during Job Execution - it will statically be set to 'devstack'.
 
 ## Todo
 
