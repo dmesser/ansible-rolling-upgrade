@@ -2,7 +2,7 @@
 
 This is a Continuous Integration / Continuous Deployment example leveraging the concept of Infrastructure-as-Data provided by Ansible.
 
-A sufficiently complex multi-tier application is orchestrated across multiple systems, networks and load balancers stood up in an OpenStack environment. The deployment process is covered in Ansible Plays and Roles end-to-end. Updates to the application are enabled by a rolling re-deployment of the application.
+A sufficiently complex multi-tier application (Rails + PostgreSQL) is orchestrated across multiple systems, networks and load balancers stood up in an OpenStack environment. The deployment process is covered in Ansible Plays and Roles end-to-end. Updates to the application are enabled by a rolling re-deployment of the application.
 
 ### Requirements
 
@@ -19,7 +19,7 @@ A sufficiently complex multi-tier application is orchestrated across multiple sy
 
 OpenStack credentials with appropriate access to the tenants need to be provided via [os-client-config]. The name of the cloud is provided via the target variable and is expected to be the same as the tenant name in OpenStack.
 
-SSH private keys need to be present in openstack/<tenant>.pem.
+SSH private keys need to be present in openstack/*tenant*.pem.
 
 ### Package Management
 
@@ -50,6 +50,24 @@ $ ansible-playbook -e "target=staging" destroy.yml
 ```
 
 ## How to run in Ansible Tower
+
+> Currently there is an issue in Ansible Tower 3.0.3 when using the built-in OpenStack inventory script.
+> os-client-config is statically initialized with the *private* parameter set to true.
+> This will cause the python-shade to treat the OpenStack cloud as not capable of providing floating IPs.
+> In this case all IPs reported in the inventory will be OpenStack-internal tenant ips.
+
+To correct the behavior edit around line 100 of the file /var/lib/awx/venv/tower/lib/python2.7/site-packages/awx/plugins/inventory/openstack.py
+
+Comment out the following statement:
+
+```python
+cloud.private = cloud.private or self.private
+```
+
+And add this below that line:
+```python
+cloud.private = False
+```
 
 1. Create a project with SCM type set to GitHub pointing to this GitHub project
 2. Create Machine credentials, one for each of the tenants containing the SSH private key
