@@ -51,29 +51,17 @@ $ ansible-playbook -e "target=staging" destroy.yml
 
 ## How to run in Ansible Tower
 
-> Currently there is an issue in Ansible Tower 3.0.3 when using the built-in OpenStack inventory script.
-> os-client-config is statically initialized with the *private* parameter set to true independent on any source variable setting due to incorrect string conversions.
-> This will cause python-shade to treat the OpenStack cloud as not capable of providing floating IPs.
+> Currently there is an issue in Ansible Tower 3.0.3 and the os-client-config version shipped with it when using the built-in OpenStack inventory script.
+> os-client-config is statically initialized with the *private* parameter set to true. This can be overridden with source variable definitions in the Tower Inventory. However incorrect string conversion leads to this parameter always be set to true unless it's initalized with ''.
+> When the parameter is true it will cause python-shade to treat the OpenStack cloud as not capable of providing floating IPs.
 > As such all IPs reported in the inventory will be OpenStack-internal tenant IPs and the floating IPs will be ignored.
-
-To correct the behavior edit around line 100 of the file /var/lib/awx/venv/tower/lib/python2.7/site-packages/awx/plugins/inventory/openstack.py
-
-Comment out the following statement:
-
-```python
-cloud.private = cloud.private or self.private
-```
-
-And add this below that line:
-```python
-cloud.private = False
-```
 
 1. Create a project with SCM type set to GitHub pointing to this GitHub project
 2. Create Machine credentials, one for each of the tenants containing the SSH private key
  * enable privilege escalation using sudo for the user 'cloud-user'
 3. Create OpenStack credentials, each containing the endpoint URLs, username, password and region for your tenants
 4. Create OpenSack Dynamic Inventories for all tenants separately
+ * set the following source variable exactly like this: private: ''
 5. Create a Job Template for the site.yml, rolling_upgrade.yml and destroy.yml, for each tenant separately with the specific credentials, keys and Inventories for this tenant
   * configure the template with the additional parameter os_client_target set to "devstack"
 
