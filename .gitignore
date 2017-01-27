@@ -1,4 +1,6 @@
 /openstack/*.pem
 *.retry
-*clouds.yaml
+clouds.yaml
+production-cloud.yaml
+staging-cloud.yaml
 ansible.cfg
