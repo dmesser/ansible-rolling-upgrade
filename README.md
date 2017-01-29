@@ -33,7 +33,7 @@ If no Red Hat Satellite Server is present call the playbooks with --skip-tags su
 
 ## How to run with ansible-playbook
 
-While you can put multiple cloud definitions in one clouds.yaml file it is encouraged to use separate files for separate tenants of the same OpenStack cloud since the OpenStack dynamic inventory script will otherwise merge all instances found into a large pool. This will lead to access problems when using the wrong SSH keys defined in the static inventory.
+> While you can put multiple cloud definitions in one clouds.yaml file it is encouraged to use separate files for separate tenants of the same OpenStack cloud since the OpenStack dynamic inventory script will otherwise merge all instances found into a large pool. This will lead to access problems when using the wrong SSH keys defined in the static inventory.
 
 To initially deploy the app:
 
