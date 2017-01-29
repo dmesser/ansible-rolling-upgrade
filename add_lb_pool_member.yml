@@ -1,3 +1,52 @@
 ---
-  
+
+- name: authenticate to cloud
+  os_auth:
+    cloud: "{{ os_client_target }}"
+
+- name: check for existing load balancer
+  shell: neutron --os-cloud={{ os_client_target }} lbaas-loadbalancer-list -f json
+  register: load_balancer_list
+  tags: lbaas
+
+- set_fact:
+    load_balancers: "{{ load_balancer_list.stdout|from_json }}"
+
+- set_fact:
+    load_balancer: true
+  when: load_balancers|length > 0 and load_balancers|selectattr('name', 'match', 'load-balancer')|list|length > 0
+
+- fail:
+    msg: "Load balancer load-balancer is not defined, aborting!"
+  when: load_balancer is not defined
+
+- name: check for existing pool
+  shell: neutron --os-cloud={{ os_client_target }} lbaas-pool-list -f json
+  register: pool_list
+
+- set_fact:
+    pools: "{{ pool_list.stdout|from_json }}"
+
+- set_fact:
+    pool: true
+  when: pools|length > 0
+
+- fail:
+    msg: "There is no load balancer pool named load-balancer-pool defined, aborting!"
+  when: pool is not defined
+
+- name: check for existing pool members
+  shell: neutron --os-cloud={{ os_client_target }} lbaas-member-list load-balancer-pool -f json
+  register: member_list
+
+- set_fact:
+    members: "{{ member_list.stdout|from_json }}"
+
+- set_fact:
+    is_pool_member: "{{ members|selectattr('name', 'match', member)|list|length > 0 }}"
+
+- name: add web server "{{ member }}" to pool
+  shell: neutron --os-cloud={{ os_client_target }} lbaas-member-create --name {{ member }} --subnet web-subnet --address {{ hostvars[member].openstack.private_v4 }}  --protocol-port 3000 load-balancer-pool
+  when: not is_pool_member
+
 ...
