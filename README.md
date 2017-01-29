@@ -61,7 +61,9 @@ $ ansible-playbook -e "target=staging" destroy.yml
  * enable privilege escalation using sudo for the user 'cloud-user'
 3. Create OpenStack credentials, each containing the endpoint URLs, username, password and region for your tenants
 4. Create OpenSack Dynamic Inventories for all tenants separately
- * set the following source variable exactly like this: private: ''
+ * set the following source variables exactly like this:
+    - private: ''
+    - use_hostnames: True
 5. Create a Job Template for the site.yml, rolling_upgrade.yml and destroy.yml, for each tenant separately with the specific credentials, keys and Inventories for this tenant
   * configure the template with the additional parameter os_client_target set to "devstack"
 
