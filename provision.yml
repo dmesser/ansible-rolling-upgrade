@@ -95,7 +95,7 @@
       - web-servers
 
   - add_host:
-      name: "{{ item.server.id }}"
+      name: "{{ item.server.name }}"
       ansible_ssh_user: cloud-user
       ansible_host: "{{ item.server.accessIPv4 }}"
       ansible_ssh_private_key_file: "openstack/{{ target }}.pem"
@@ -110,7 +110,7 @@
       - database-server
 
   - add_host:
-      name: "{{ database_server.server.id }}"
+      name: "{{ database_server.server.name }}"
       ansible_ssh_user: cloud-user
       ansible_host: "{{ database_server.server.accessIPv4 }}"
       ansible_ssh_private_key_file: "openstack/{{ target }}.pem"
@@ -214,17 +214,11 @@
       - set_fact:
           members: "{{ member_list.stdout|from_json }}"
 
-      - name: check if web servers are members of the pool
-        shell: neutron --os-cloud={{ os_client_target }} lbaas-member-show {{ item.server.name }} load-balancer-pool
-        with_items:
-          - "{{ web_servers.results }}"
-        when: members|length > 0
-
       - name: create pool members for web servers
         shell: neutron --os-cloud={{ os_client_target }} lbaas-member-create --name {{ item.server.name }} --subnet web-subnet --address {{ item.server.private_v4 }}  --protocol-port 3000 load-balancer-pool
         with_items:
           - "{{ web_servers.results }}"
-        when: members|length == 0
+        when: members|length == 0 or members|selectattr('address', 'match', item.server.private_v4)|list|length == 0
 
       - name: check for existing floating ip
         shell: neutron --os-cloud={{ os_client_target }} floatingip-list -f json
