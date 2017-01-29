@@ -17,7 +17,13 @@ A sufficiently complex multi-tier application (Rails + PostgreSQL) is orchestrat
 
 ### Credential management
 
-OpenStack credentials with appropriate access to the tenants need to be provided via [os-client-config]. The name of the cloud is provided via the target variable and is expected to be the same as the tenant name in OpenStack.
+OpenStack credentials with appropriate access to the tenants need to be provided via [os-client-config]. The name of the cloud is provided via the target variable and is expected to be the same as the tenant name in OpenStack. If it is not the same it can be override with the variable os_client_target. Please configure the os-client-config file to contain the following directives:
+
+```sh
+ansible:
+  private: ''
+  use_hostnames: True
+```
 
 SSH private keys need to be present in openstack/*tenant*.pem.
 
