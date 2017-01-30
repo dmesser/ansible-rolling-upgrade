@@ -27,6 +27,6 @@
 
     - name: pause for demo purposes
       pause:
-        seconds: 10
+        seconds: 30
 
 ...
