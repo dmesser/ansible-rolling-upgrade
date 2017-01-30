@@ -1,8 +1,0 @@
-clouds:
-  production:
-    region_name: RegionOne
-    auth:
-      username: demo
-      password: password
-      project_name: demo-production
-      auth_url: http://192.168.26.69:5000/v2.0
