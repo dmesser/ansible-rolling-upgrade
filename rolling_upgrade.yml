@@ -12,10 +12,6 @@
       wait_for: host={{ openstack.accessIPv4 }} port=3000 state=drained timeout=60
       delegate_to: localhost
 
-    - name: pause for demo purposes
-      pause:
-        seconds: 10
-
   roles:
     - rails
     - { role: rails-app, postgres: "{{ hostvars[groups['database-server'][0]]['postgres'] }}" }
@@ -28,5 +24,9 @@
 
     - include: add_lb_pool_member.yml member={{ openstack.name }}
       delegate_to: localhost
+
+    - name: pause for demo purposes
+      pause:
+        seconds: 10
 
 ...

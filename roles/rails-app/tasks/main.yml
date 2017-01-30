@@ -9,7 +9,8 @@
 
     - name: deploy application from git
       git:
-        repo: https://github.com/dmesser/rails-ex.git
+        repo: "{{ git_repo_url }}"
+        version: "{{ git_repo_branch }}"
         dest: rails-ex
         force: yes
 
@@ -32,8 +33,8 @@
 
 - name: create systemd service for app
   copy: src=rails-ex.service dest=/etc/systemd/system/rails-ex.service
-  notify:
-    - start app
 
+- name: ensure app is started
+  systemd: name=rails-ex state=restarted daemon_reload=yes
 
 ...

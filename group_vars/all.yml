@@ -9,4 +9,8 @@ satellite:
 os_client_target: "{{ target }}" # introduced to override from within  Ansible Tower
                                  # where the cloud name is static ('devstack')
 
+
+git_repo_url: https://github.com/dmesser/rails-ex.git
+git_repo_branch: development
+
 ...

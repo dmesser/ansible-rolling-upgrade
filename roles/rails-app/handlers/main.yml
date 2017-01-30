@@ -1,2 +1,0 @@
-- name: start app
-  systemd: name=rails-ex state=restarted daemon_reload=yes
